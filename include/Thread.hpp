@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "Timer.hpp"
+
 #include <memory>
 #include <thread>
 #include <vector>
@@ -32,26 +34,36 @@ struct Context
     void* rip;      // 0x38
 };
 
+using tid_t = size_t;
+
 class Thread
 {
 public:
     Thread(void (*func)());
 
+    tid_t gettid() const;
+
     static void Init();
 
 private:
-    static void Switch(Context* from, Context* to);
-    static void SchedulerFunc();
+    static void Switch(Thread* from, Thread* to);
+    static void SchedulerFunc(int signal);
 
 private:
     // constants and static variables
     static constexpr size_t STACK_SIZE = 1 << 20; // 1 MB
 
-    static std::vector<std::thread> s_threads;
-    static Thread s_schedulerThread;
+    static tid_t s_idCounter;
+    static std::vector<Thread*> s_threads;
+    static Thread s_mainThread;
     static Thread* s_currentThread;
 
+    // timer
+    static Timer s_timer;
 private:
+    // id
+    id_t m_tid;
+
     // state of the thread
     ThreadState m_state;
     Context m_context {};
@@ -60,6 +72,6 @@ private:
     std::unique_ptr<uint8_t[]> m_stack;
 
     // related pointers
-    uint8_t* m_sp;
-    uint8_t* m_pc;
+    void* m_sp;
+    void* m_ip;
 };

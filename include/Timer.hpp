@@ -3,11 +3,17 @@
 #include <signal.h>
 #include <sys/time.h>
 
+// TODO: use pimpl for cross platform
 class Timer
 {
 public:
-    Timer(void (*func)(int));
-    ~Timer();
+    Timer(void (*func)(int), size_t startMs, size_t intervalMs);
+
+    // TODO: remove default constructor
+    Timer() = default;
+
+    void disableInterrupts();
+    void enableInterrupts();
 
 private:
     struct sigaction sa{};
