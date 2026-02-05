@@ -1,22 +1,19 @@
 #include "../include/Thread.hpp"
-
-#include <cassert>
 #include <iostream>
 
-// TODO: remove default constructor
-Timer Thread::s_timer = Timer();
+// initialize timer
+Timer Thread::s_timer = Timer(SchedulerFunc, 150, 150);
 
 // Optionally cleanup
 tid_t Thread::s_idCounter = 0;
 std::vector<Thread*> Thread::s_threads{};
 
-// initialize default threads
+// initialize main thread
 Thread Thread::s_main = Thread(nullptr);
 
+// set up pointers for switching
 Thread* Thread::s_current = &Thread::s_main;
 Thread* Thread::s_prev = nullptr;
-// Thread Thread::s_scheduler {};
-
 
 Thread::Thread(void (*func)())
     : m_tid(s_idCounter++),
@@ -47,22 +44,6 @@ tid_t Thread::gettid() const
 {
     return m_tid;
 }
-
-void Thread::Init()
-{
-    // TODO: what if Init is accidentally called for the second time?
-
-    std::cout << "Tread init. \n";
-
-    // s_scheduler = Thread(SchedulerFunc);
-
-    // create first thread and set its starting point to the main function
-    // Switch();
-
-    // set up the interrupts
-    // s_timer = Timer(SchedulerFunc, 150, 150);
-}
-
 
 void Thread::Switch(Thread* dest)
 {

@@ -34,7 +34,6 @@ public:
 
     tid_t gettid() const;
 
-    static void Init();
     static void Yield();
 
 private:
@@ -51,8 +50,6 @@ private:
 
     // main thread
     static Thread s_main;
-
-    // schefuler thread???
 
     // current thread
     static Thread* s_current;

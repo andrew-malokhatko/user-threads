@@ -9,9 +9,6 @@ class Timer
 public:
     Timer(void (*func)(int), size_t startMs, size_t intervalMs);
 
-    // TODO: remove default constructor
-    Timer() = default;
-
     void disableInterrupts();
     void enableInterrupts();
 
