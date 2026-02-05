@@ -11,6 +11,7 @@
 
 #include "Timer.hpp"
 
+#include <csetjmp>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -20,18 +21,6 @@ enum class ThreadState
     Running,
     Blocked,
     Ready
-};
-
-struct Context
-{
-    uint64_t rbx;   // 0x00
-    uint64_t rbp;   // 0x08
-    uint64_t r12;   // 0x10
-    uint64_t r13;   // 0x18
-    uint64_t r14;   // 0x20
-    uint64_t r15;   // 0x28
-    void* rsp;      // 0x30
-    void* rip;      // 0x38
 };
 
 using tid_t = size_t;
@@ -60,13 +49,18 @@ private:
 
     // timer
     static Timer s_timer;
+
+    // static thread environment copy after stack change
+    static sigjmp_buf s_creatorEnv;
+
 private:
     // id
     id_t m_tid;
+    void (*m_func)();
 
     // state of the thread
     ThreadState m_state;
-    Context m_context {};
+    sigjmp_buf m_env {};
 
     // stack data
     std::unique_ptr<uint8_t[]> m_stack;
