@@ -4,8 +4,11 @@ project(user_threads)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS -masm=intel)
 
-add_executable(user_threads main.cpp
-        include/Thread.hpp
-        src/Thread.cpp
-        include/Timer.hpp
-        src/Timer.cpp)
+add_subdirectory(uthreads)
+
+add_executable(user_threads main.cpp)
+target_link_libraries(user_threads PRIVATE uthreads)
+
+target_include_directories(user_threads
+    PUBLIC uthreads/include
+)

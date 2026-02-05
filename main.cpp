@@ -1,6 +1,6 @@
-#include "include/Thread.hpp"
-#include <chrono>
+#include "Thread.hpp"
 
+#include <chrono>
 #include <iostream>
 
 void another_func()

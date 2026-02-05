@@ -1,4 +1,5 @@
-#include "../include/Thread.hpp"
+#include "Thread.hpp"
+
 #include <iostream>
 
 // initialize timer

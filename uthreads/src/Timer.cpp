@@ -1,4 +1,4 @@
-#include "../include/Timer.hpp"
+#include "Timer.hpp"
 
 Timer::Timer(void (*func)(int), size_t startMs, size_t intervalMs)
 {
