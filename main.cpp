@@ -14,7 +14,6 @@ void another_func()
 }
 
 int main() {
-    Thread::Init();
 
     Thread t = Thread(another_func);
 

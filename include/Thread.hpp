@@ -15,6 +15,8 @@
 #include <thread>
 #include <vector>
 
+#include <ucontext.h>
+
 enum class ThreadState
 {
     Running,
@@ -22,17 +24,6 @@ enum class ThreadState
     Ready
 };
 
-struct Context
-{
-    uint64_t rbx;   // 0x00
-    uint64_t rbp;   // 0x08
-    uint64_t r12;   // 0x10
-    uint64_t r13;   // 0x18
-    uint64_t r14;   // 0x20
-    uint64_t r15;   // 0x28
-    void* rsp;      // 0x30
-    void* rip;      // 0x38
-};
 
 using tid_t = size_t;
 
@@ -43,35 +34,40 @@ public:
 
     tid_t gettid() const;
 
-    static void Init();
+    static void Yield();
 
 private:
-    static void Switch(Thread* from, Thread* to);
+    Thread() = default;
+
     static void SchedulerFunc(int signal);
+    static void Switch(Thread* dest);
 
 private:
-    // constants and static variables
     static constexpr size_t STACK_SIZE = 1 << 20; // 1 MB
 
     static tid_t s_idCounter;
     static std::vector<Thread*> s_threads;
-    static Thread s_mainThread;
-    static Thread* s_currentThread;
+
+    // main thread
+    static Thread s_main;
+
+    // current thread
+    static Thread* s_current;
+    static Thread* s_prev;
 
     // timer
     static Timer s_timer;
+
 private:
     // id
     id_t m_tid;
 
     // state of the thread
     ThreadState m_state;
-    Context m_context {};
+
+    // context
+    ucontext_t m_context;
 
     // stack data
     std::unique_ptr<uint8_t[]> m_stack;
-
-    // related pointers
-    void* m_sp;
-    void* m_ip;
 };
