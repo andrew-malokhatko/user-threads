@@ -3,7 +3,7 @@
 #include <iostream>
 
 // initialize timer
-Timer Thread::s_timer = Timer(SchedulerFunc, 150, 150);
+Timer Thread::s_timer = Timer(SchedulerFunc, 100, 100);
 
 // Optionally cleanup
 tid_t Thread::s_idCounter = 0;
@@ -50,18 +50,16 @@ void Thread::Switch(Thread* dest)
 {
     std::cout << "switching from tid: " << s_current->m_tid << " to " << dest->m_tid << "\n";
 
-    // set new current thread
-    // s_current = dest;
+    // update current and prev threads to be valid after switch
     s_prev = s_current;
     s_current = dest;
 
-    // restore other threads context
+    // swap this thread saved in prev and dest
     swapcontext(&(s_prev->m_context), &dest->m_context);
 }
 
 void Thread::Yield()
 {
-    // Switch(s_scheduler);
     SchedulerFunc(0);
 }
 
@@ -69,11 +67,8 @@ void Thread::SchedulerFunc(int signal)
 {
     if (signal == 0)
     {
-        std::cout << "Yield\n";
+        // on yield
     }
-
-    std::cout << "Running scheduler func\n";
-    std::cout << "Received signal: " << signal << "\n";
 
     size_t candidateIndex = -1;
     for (size_t i = 0; i < s_threads.size(); ++i)

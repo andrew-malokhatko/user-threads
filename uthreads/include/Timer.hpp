@@ -1,6 +1,6 @@
 #pragma once
 
-#include <signal.h>
+#include <csignal>
 #include <sys/time.h>
 
 // TODO: use pimpl for cross platform

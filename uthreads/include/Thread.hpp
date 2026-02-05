@@ -1,12 +1,3 @@
-// Base idea:
-//
-// 1. run init that starts the timer.
-// 2. Initialize the scheduler thread (No need to switch immediately, this can happen once one more thread is created)
-// 3. Start the timer and continue main execution
-// 4. once the timer triggers, the scheduler thread can choose the new thread
-// 5. Figure out what registers are saved when the timer is triggered and which should I save manually
-// 6. Research if the interrupts should be disabled when context switching
-
 #pragma once
 
 #include "Timer.hpp"
@@ -23,7 +14,6 @@ enum class ThreadState
     Blocked,
     Ready
 };
-
 
 using tid_t = size_t;
 
