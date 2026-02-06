@@ -15,7 +15,7 @@ void another_func()
 
 int main() {
 
-    Thread t = Thread(another_func);
+    uthread::Thread t {another_func};
 
     while (true)
     {

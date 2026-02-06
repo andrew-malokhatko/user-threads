@@ -1,8 +1,10 @@
 add_library(uthreads
-    include/Thread.hpp
-    include/Timer.hpp
-    src/Thread.cpp
-    src/Timer.cpp
+        include/Thread.hpp
+        src/Timer.hpp
+        src/Thread.cpp
+        src/Timer.cpp
+        src/Scheduler.cpp
+        src/Scheduler.hpp
 )
 
 target_include_directories(uthreads

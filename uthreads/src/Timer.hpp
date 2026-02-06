@@ -3,6 +3,8 @@
 #include <csignal>
 #include <sys/time.h>
 
+namespace uthread
+{
 // TODO: use pimpl for cross platform
 class Timer
 {
@@ -16,3 +18,5 @@ private:
     struct sigaction sa{};
     itimerval timer{};
 };
+
+}

@@ -1,5 +1,8 @@
 #include "Timer.hpp"
 
+namespace uthread
+{
+
 Timer::Timer(void (*func)(int), size_t startMs, size_t intervalMs)
 {
     sa.sa_handler = func;
@@ -34,3 +37,5 @@ void Timer::enableInterrupts()
 {
     sigaddset(&sa.sa_mask, SIGVTALRM);
 }
+
+} // namespace uthread
