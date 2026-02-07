@@ -14,6 +14,8 @@ enum class ThreadState
     Running,
     Ready,
     Finished,
+
+    Daemon,
 };
 
 using tid_t = size_t;
@@ -36,8 +38,15 @@ public:
     static void Exit();
 
 private:
+    Thread(void (*func)(), ThreadState state);
+    Thread() = default;
+
     static void Switch(Thread* dest);
     static void SchedulerFunc(int signal);
+    static void Cleanup();
+
+    static Thread* InitCleanup();
+    static Thread* s_cleanup;
 
     friend class Scheduler;
 

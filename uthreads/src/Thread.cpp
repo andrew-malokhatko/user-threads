@@ -3,10 +3,15 @@
 #include "Scheduler.hpp"
 #include "Timer.hpp"
 
+#include <cassert>
 #include <iostream>
+#include <algorithm>
 
 namespace uthread
 {
+
+// clean up thread no present in g_threads
+Thread* Thread::s_cleanup = Thread::InitCleanup();
 
 namespace
 {
@@ -28,23 +33,23 @@ std::vector<Thread*> g_threads{};
 Thread g_main = {nullptr};
 
 // set up pointers for switching
-Thread *g_current = &g_main;
-Thread *g_prev = nullptr;
+Thread* g_current = &g_main;
+Thread* g_prev = nullptr;
 
 } // anonymous namespace
 
 Thread::Thread(void (*func)())
-    : m_tid(g_idCounter++),
-    m_state(ThreadState::Ready),
-    m_stack(std::make_unique<uint8_t[]>(STACK_SIZE))
+    : Thread(func, ThreadState::Ready)
 {
-    // init the stack pointer
-    unsigned char* sp = m_stack.get() + STACK_SIZE;
-    sp = reinterpret_cast<uint8_t*>((reinterpret_cast<uintptr_t>(sp) & ~0xF));
-
     // add thread to the list
     g_threads.push_back(this);
+}
 
+Thread::Thread(void (*func)(), ThreadState state)
+    : m_tid(g_idCounter++),
+    m_state(state),
+    m_stack(std::make_unique<uint8_t[]>(STACK_SIZE))
+{
     // create new context for this thread
     getcontext(&m_context);
 
@@ -52,8 +57,7 @@ Thread::Thread(void (*func)())
     m_context.uc_stack.ss_size = STACK_SIZE;
     m_context.uc_stack.ss_flags = 0;
 
-    // TODO: not scheduler????
-    m_context.uc_link = &g_main.m_context;
+    m_context.uc_link = &s_cleanup->m_context;
 
     makecontext(&m_context, reinterpret_cast<void(*)()>(func), 0);
 }
@@ -63,6 +67,7 @@ Thread::~Thread()
     if (!m_detached)
     {
         // joinable thread cannot be destroyed
+        // NOTE: call join or detach before the thread is destroyed
         std::terminate();
     }
 }
@@ -101,6 +106,11 @@ void Thread::SchedulerFunc(int signal)
         // on yield
     }
 
+    if (signal == 1)
+    {
+        // on thread exited
+    }
+
     if (signal == SIGVTALRM)
     {
         // timer interrupt
@@ -111,6 +121,49 @@ void Thread::SchedulerFunc(int signal)
     // switch only if schedulers decides to
     if (next != nullptr)
         Switch(next);
+}
+
+void Thread::Cleanup()
+{
+    assert(g_current != s_cleanup);
+
+    g_current->m_state = ThreadState::Finished;
+
+    if (g_current == &g_main)
+    {
+        std::cout << "Main thread finished. Exiting...\n";
+        std::exit(0);
+    }
+
+    // find and remove finished thread
+    const auto it = std::find(g_threads.begin(), g_threads.end(), g_current);
+    assert(it != g_threads.end());
+
+    g_threads.erase(it);
+
+    SchedulerFunc(1);
+}
+
+Thread* Thread::InitCleanup()
+{
+    static Thread thread;
+
+    thread.m_tid = g_idCounter++;
+    thread.m_state = ThreadState::Ready;
+    thread.m_stack = std::make_unique<uint8_t[]>(STACK_SIZE);
+
+    // create new context for this thread
+    getcontext(&thread.m_context);
+
+    thread.m_context.uc_stack.ss_sp = thread.m_stack.get();
+    thread.m_context.uc_stack.ss_size = STACK_SIZE;
+    thread.m_context.uc_stack.ss_flags = 0;
+
+    thread.m_context.uc_link = nullptr;
+
+    makecontext(&thread.m_context, reinterpret_cast<void(*)()>(Cleanup), 0);
+
+    return &thread;
 }
 
 } // namespace uthread

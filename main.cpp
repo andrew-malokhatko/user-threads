@@ -13,13 +13,17 @@ void another_func()
     }
 }
 
+void joinable_func()
+{
+    std::cout << "Running joinable func\n";
+}
+
 int main() {
 
-    uthread::Thread t {another_func};
+    uthread::Thread t {joinable_func};
 
     while (true)
     {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::cout << "Running main\n";
     }
 }
