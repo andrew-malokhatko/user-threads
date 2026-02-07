@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Timer.hpp"
+
 #include <vector>
 
 namespace uthread
@@ -8,7 +10,11 @@ namespace uthread
 
     class Scheduler
     {
+        // timer for interrupts
+        Timer m_timer;
+
     public:
+        Scheduler(size_t intervalMs);
         virtual ~Scheduler() = default;
 
         // TODO: review schedule api
@@ -17,7 +23,10 @@ namespace uthread
 
     class NaiveScheduler : public Scheduler
     {
+        static constexpr size_t TIMER_INTERVAL_MS = 100;
+
     public:
+        NaiveScheduler();
         Thread* chooseNext(const Thread* current, const std::vector<Thread*>& threads) override;
     };
 

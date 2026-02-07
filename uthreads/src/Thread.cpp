@@ -8,27 +8,21 @@
 namespace uthread
 {
 
-static void SchedulerFunc(int signal);
-
 namespace
 {
 
 // initialize constants and globals
 constexpr size_t STACK_SIZE = 1 << 20; // 1 MB
 
-// initialize scheduler and forward declare SchedulerFunc()
+// initialize scheduler with interrupts
 std::unique_ptr<Scheduler> scheduler = std::make_unique<NaiveScheduler>();
-// void SchedulerFunc(int signal);
-
-// create timer for interrupts
-Timer g_timer = Timer(SchedulerFunc, 100, 100);
 
 // id counter
 tid_t g_idCounter = 0;
 
 // TODO: review, potentially store threads instaed of pointer
 // store threads here
-std::vector<Thread *> g_threads{};
+std::vector<Thread*> g_threads{};
 
 // initialize main thread
 Thread g_main = {nullptr};
@@ -64,9 +58,23 @@ Thread::Thread(void (*func)())
     makecontext(&m_context, reinterpret_cast<void(*)()>(func), 0);
 }
 
+Thread::~Thread()
+{
+    if (!m_detached)
+    {
+        // joinable thread cannot be destroyed
+        std::terminate();
+    }
+}
+
 tid_t Thread::gettid() const
 {
     return m_tid;
+}
+
+void Thread::join()
+{
+
 }
 
 void Thread::Yield()
@@ -74,7 +82,7 @@ void Thread::Yield()
     SchedulerFunc(0);
 }
 
-void Switch(Thread* dest)
+void Thread::Switch(Thread* dest)
 {
     std::cout << "switching from tid: " << g_current->m_tid << " to " << dest->m_tid << "\n";
 
@@ -86,7 +94,7 @@ void Switch(Thread* dest)
     swapcontext(&(g_prev->m_context), &dest->m_context);
 }
 
-void SchedulerFunc(int signal)
+void Thread::SchedulerFunc(int signal)
 {
     if (signal == 0)
     {
@@ -100,7 +108,7 @@ void SchedulerFunc(int signal)
 
     Thread* next = scheduler->chooseNext(g_current, g_threads);
 
-    // switch only if the other thread exists
+    // switch only if schedulers decides to
     if (next != nullptr)
         Switch(next);
 }

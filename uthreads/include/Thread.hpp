@@ -12,8 +12,8 @@ namespace uthread
 enum class ThreadState
 {
     Running,
-    Blocked,
-    Ready
+    Ready,
+    Finished,
 };
 
 using tid_t = size_t;
@@ -22,13 +22,24 @@ class Thread
 {
 public:
     Thread(void (*func)());
+    ~Thread();
+
+    Thread(const Thread&) = delete;
+    Thread& operator=(const Thread&) = delete;
 
     tid_t gettid() const;
 
+    void join();
+    // void detach();
+
     static void Yield();
+    static void Exit();
 
 private:
-    friend void Switch(Thread* dest);
+    static void Switch(Thread* dest);
+    static void SchedulerFunc(int signal);
+
+    friend class Scheduler;
 
 private:
     // id
@@ -42,6 +53,8 @@ private:
 
     // stack data
     std::unique_ptr<uint8_t[]> m_stack;
+
+    bool m_detached = false;
 };
 
 }
