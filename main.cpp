@@ -21,9 +21,7 @@ void joinable_func()
 int main() {
 
     uthread::Thread t {joinable_func};
+    t.join();
 
-    while (true)
-    {
-        std::cout << "Running main\n";
-    }
+    std::cout << "Running main\n";
 }

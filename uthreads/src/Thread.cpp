@@ -1,7 +1,7 @@
 #include "Thread.hpp"
 
 #include "Scheduler.hpp"
-#include "Timer.hpp"
+#include "TCB.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -10,61 +10,47 @@
 namespace uthread
 {
 
-// clean up thread no present in g_threads
-Thread* Thread::s_cleanup = Thread::InitCleanup();
+static void Cleanup();
+static void SchedulerFunc(int signal);
+
+// state initialization
+namespace state
+{
+    // cleanup is not stored in tcbs vector as it does not participate in scheduling
+    TCB cleanup {Cleanup, ThreadState::Daemon, nullptr};
+
+    std::list<TCB> tcbs;
+
+    TCB* main = nullptr;
+    TCB* current = nullptr;
+    TCB* prev = nullptr;
+}
 
 namespace
 {
-
-// initialize constants and globals
-constexpr size_t STACK_SIZE = 1 << 20; // 1 MB
-
-// initialize scheduler with interrupts
-std::unique_ptr<Scheduler> scheduler = std::make_unique<NaiveScheduler>();
-
-// id counter
-tid_t g_idCounter = 0;
-
-// TODO: review, potentially store threads instaed of pointer
-// store threads here
-std::vector<Thread*> g_threads{};
-
-// initialize main thread
-Thread g_main = {nullptr};
-
-// set up pointers for switching
-Thread* g_current = &g_main;
-Thread* g_prev = nullptr;
-
-} // anonymous namespace
-
-Thread::Thread(void (*func)())
-    : Thread(func, ThreadState::Ready)
-{
-    // add thread to the list
-    g_threads.push_back(this);
+    // initialize scheduler with interrupts
+    std::unique_ptr<Scheduler> scheduler = std::make_unique<NaiveScheduler>(SchedulerFunc);
 }
 
-Thread::Thread(void (*func)(), ThreadState state)
-    : m_tid(g_idCounter++),
-    m_state(state),
-    m_stack(std::make_unique<uint8_t[]>(STACK_SIZE))
+Thread::Thread(void (*func)())
 {
-    // create new context for this thread
-    getcontext(&m_context);
+    // initialize threads when the first one is created;
+    static bool init = false;
+    if (!init) {
+        state::tcbs.emplace_back(nullptr, ThreadState::Running, &state::cleanup);
+        state::main = &state::tcbs.back();
+        state::current = state::main;
+        init = true;
+    };
 
-    m_context.uc_stack.ss_sp = m_stack.get();
-    m_context.uc_stack.ss_size = STACK_SIZE;
-    m_context.uc_stack.ss_flags = 0;
+    std::cout << init;
 
-    m_context.uc_link = &s_cleanup->m_context;
-
-    makecontext(&m_context, reinterpret_cast<void(*)()>(func), 0);
+    m_tcb = &state::tcbs.emplace_back(func, ThreadState::Ready, &state::cleanup);
 }
 
 Thread::~Thread()
 {
-    if (!m_detached)
+    if (m_tcb->joinable)
     {
         // joinable thread cannot be destroyed
         // NOTE: call join or detach before the thread is destroyed
@@ -72,14 +58,32 @@ Thread::~Thread()
     }
 }
 
-tid_t Thread::gettid() const
+id_t Thread::gettid() const
 {
-    return m_tid;
+    return m_tcb->getId();
+}
+
+bool Thread::joinable() const
+{
+    return m_tcb->joinable;
 }
 
 void Thread::join()
 {
+    if (!m_tcb->joinable)
+    {
+        std::terminate();
+    }
 
+    auto it = std::find(state::tcbs.begin(), state::tcbs.end(), *m_tcb);
+    assert(it != state::tcbs.end());
+
+    while (m_tcb->state != ThreadState::Finished)
+    {
+        Yield();
+    }
+
+    m_tcb->joinable = false;
 }
 
 void Thread::Yield()
@@ -87,19 +91,8 @@ void Thread::Yield()
     SchedulerFunc(0);
 }
 
-void Thread::Switch(Thread* dest)
-{
-    std::cout << "switching from tid: " << g_current->m_tid << " to " << dest->m_tid << "\n";
 
-    // update current and prev threads to be valid after switch
-    g_prev = g_current;
-    g_current = dest;
-
-    // swap this thread saved in prev and dest
-    swapcontext(&(g_prev->m_context), &dest->m_context);
-}
-
-void Thread::SchedulerFunc(int signal)
+static void SchedulerFunc(int signal)
 {
     if (signal == 0)
     {
@@ -116,54 +109,40 @@ void Thread::SchedulerFunc(int signal)
         // timer interrupt
     }
 
-    Thread* next = scheduler->chooseNext(g_current, g_threads);
+    const TCB* next = scheduler->chooseNext(state::current, state::tcbs);
 
     // switch only if schedulers decides to
     if (next != nullptr)
-        Switch(next);
+        // TODO: const cast??? seriously????
+        TCB::Switch(const_cast<TCB*>(next));
 }
 
-void Thread::Cleanup()
+static void Cleanup()
 {
-    assert(g_current != s_cleanup);
+    assert(state::current != &state::cleanup);
 
-    g_current->m_state = ThreadState::Finished;
+    state::current->state = ThreadState::Finished;
 
-    if (g_current == &g_main)
+    // if (state::current == &state::main)
+    if (state::current == state::main)
     {
         std::cout << "Main thread finished. Exiting...\n";
         std::exit(0);
     }
 
     // find and remove finished thread
-    const auto it = std::find(g_threads.begin(), g_threads.end(), g_current);
-    assert(it != g_threads.end());
+    const auto it = std::find(state::tcbs.begin(), state::tcbs.end(), *state::current);
+    assert(it != state::tcbs.end());
 
-    g_threads.erase(it);
+    // wait for the thread to be joined before cleaning it up, Thread::join() uses tcb.
+    while (state::current->joinable)
+    {
+        Thread::Yield();
+    }
+
+    state::tcbs.erase(it);
 
     SchedulerFunc(1);
-}
-
-Thread* Thread::InitCleanup()
-{
-    static Thread thread;
-
-    thread.m_tid = g_idCounter++;
-    thread.m_state = ThreadState::Ready;
-    thread.m_stack = std::make_unique<uint8_t[]>(STACK_SIZE);
-
-    // create new context for this thread
-    getcontext(&thread.m_context);
-
-    thread.m_context.uc_stack.ss_sp = thread.m_stack.get();
-    thread.m_context.uc_stack.ss_size = STACK_SIZE;
-    thread.m_context.uc_stack.ss_flags = 0;
-
-    thread.m_context.uc_link = nullptr;
-
-    makecontext(&thread.m_context, reinterpret_cast<void(*)()>(Cleanup), 0);
-
-    return &thread;
 }
 
 } // namespace uthread

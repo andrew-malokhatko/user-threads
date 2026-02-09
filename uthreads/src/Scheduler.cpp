@@ -1,29 +1,30 @@
 #include "Scheduler.hpp"
 
+#include "TCB.hpp"
 #include "Thread.hpp"
 
 namespace uthread
 {
 
-Scheduler::Scheduler(size_t intervalMs)
+Scheduler::Scheduler(void (*func)(int), size_t intervalMs)
 // TODO: Pass Scheduler func as an argument
-    : m_timer(Thread::SchedulerFunc, intervalMs, intervalMs)
+    : m_timer(func, intervalMs, intervalMs)
 {
 }
 
-NaiveScheduler::NaiveScheduler()
-    : Scheduler(TIMER_INTERVAL_MS)
+NaiveScheduler::NaiveScheduler(void (*func)(int))
+    : Scheduler(func, TIMER_INTERVAL_MS)
 {
 }
 
-Thread *NaiveScheduler::chooseNext(const Thread *current, const std::vector<Thread *> &threads)
+const TCB* NaiveScheduler::chooseNext(const TCB* current, const std::list<TCB>& threads)
 {
-    for (const auto &thread : threads)
+    for (const auto& thread : threads)
     {
         // find first thread that is not current thread
-        if (current->gettid() != thread->gettid())
+        if (current->getId() != thread.getId())
         {
-            return thread;
+            return &thread;
         }
     }
 

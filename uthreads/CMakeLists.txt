@@ -5,6 +5,8 @@ add_library(uthreads
         src/Timer.cpp
         src/Scheduler.cpp
         src/Scheduler.hpp
+        src/TCB.hpp
+        src/TCB.cpp
 )
 
 target_include_directories(uthreads
