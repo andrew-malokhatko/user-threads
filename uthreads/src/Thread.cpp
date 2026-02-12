@@ -72,7 +72,7 @@ void Thread::join()
 {
     if (!m_tcb->joinable)
     {
-        std::terminate();
+        throw std::system_error(std::make_error_code(std::errc::invalid_argument), "thread not joinable");
     }
 
     auto it = std::find(state::tcbs.begin(), state::tcbs.end(), *m_tcb);

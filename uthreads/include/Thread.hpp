@@ -11,6 +11,8 @@ namespace uthread
 
 class TCB;
 
+using id_t = size_t;
+
 class Thread
 {
 public:
@@ -20,11 +22,10 @@ public:
     Thread(const Thread&) = delete;
     Thread& operator=(const Thread&) = delete;
 
-    id_t gettid() const;
-    bool joinable() const;
+    [[nodiscard]] id_t gettid() const;
+    [[nodiscard]] bool joinable() const;
 
     void join();
-    // void detach();
 
     static void Yield();
 
