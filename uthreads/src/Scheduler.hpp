@@ -13,7 +13,7 @@ namespace uthread
         Timer m_timer;
 
     public:
-        Scheduler(void (*func)(int), size_t intervalMs);
+        Scheduler(void (*func)(int), size_t intervalMs, bool enableInterrupts);
         virtual ~Scheduler() = default;
 
         // TODO: review schedule api
@@ -22,12 +22,16 @@ namespace uthread
 
     class NaiveScheduler : public Scheduler
     {
-        static constexpr size_t TIMER_INTERVAL_MS = 100;
-
     public:
-        NaiveScheduler(void (*func)(int));
+        NaiveScheduler(void (*func)(int), bool enableInterrupts = true);
         const TCB* chooseNext(const TCB* current, const std::list<TCB>& threads) override;
     };
 
-    // TODO: implement round robin or something
+    class RoundRobinScheduler : public Scheduler
+    {
+        size_t m_prevIndex = 0;
+    public:
+        RoundRobinScheduler(void (*func)(int), bool enableInterrupts = true);
+        const TCB* chooseNext(const TCB* current, const std::list<TCB>& threads) override;
+    };
 }
