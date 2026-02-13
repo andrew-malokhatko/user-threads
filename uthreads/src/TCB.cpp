@@ -44,11 +44,25 @@ id_t TCB::getId() const
 
 void TCB::Switch(TCB* dest)
 {
-    std::cout << "switching from tid: " << state::current->m_id << " to " << dest->m_id << "\n";
+    if (state::current)
+    {
+        std::cout << "switching from tid: " << state::current->m_id << " to " << dest->m_id << "\n";
+    }
+    else
+    {
+        std::cout << "switching from NULL to " << dest->m_id << "\n";
+    }
 
     // update current and prev threads to be valid after switch
     state::prev = state::current;
     state::current = dest;
+
+    if (!state::prev)
+    {
+
+        // set context if coming from the finished thread
+        setcontext(&dest->context);
+    }
 
     // swap this thread saved in prev and dest
     swapcontext(&(state::prev->context), &dest->context);

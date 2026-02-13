@@ -109,6 +109,15 @@ static void SchedulerFunc(int signal)
         // timer interrupt
     }
 
+    if (state::current->state == ThreadState::Finished && !state::current->joinable)
+    {
+        const auto it = std::find(state::tcbs.begin(), state::tcbs.end(), *state::current);
+
+        assert(&(*it) == state::current);
+        state::tcbs.erase(it);
+        state::current = nullptr;
+    }
+
     const TCB* next = scheduler->chooseNext(state::current, state::tcbs);
 
     // switch only if schedulers decides to
@@ -117,31 +126,11 @@ static void SchedulerFunc(int signal)
         TCB::Switch(const_cast<TCB*>(next));
 }
 
-static void Cleanup()
+// Note, this function is executed in one global thread (as a fallback from each user thread)
+// this means that it cannot reliably yield without
+void Cleanup()
 {
-    assert(state::current != &state::cleanup);
-
     state::current->state = ThreadState::Finished;
-
-    // if (state::current == &state::main)
-    if (state::current == state::main)
-    {
-        std::cout << "Main thread finished. Exiting...\n";
-        std::exit(0);
-    }
-
-    // find and remove finished thread
-    const auto it = std::find(state::tcbs.begin(), state::tcbs.end(), *state::current);
-    assert(it != state::tcbs.end());
-
-    // wait for the thread to be joined before cleaning it up, Thread::join() uses tcb.
-    while (state::current->joinable)
-    {
-        Thread::Yield();
-    }
-
-    state::tcbs.erase(it);
-
     SchedulerFunc(1);
 }
 
