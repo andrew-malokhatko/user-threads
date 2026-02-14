@@ -1,4 +1,4 @@
-#include "Thread.hpp"
+#include "../include/uthreads/Thread.hpp"
 
 #include "Scheduler.hpp"
 #include "TCB.hpp"
@@ -50,12 +50,28 @@ Thread::Thread(void (*func)())
 
 Thread::~Thread()
 {
-    if (m_tcb->joinable)
+    if (m_tcb && m_tcb->joinable)
     {
         // joinable thread cannot be destroyed
         // NOTE: call join or detach before the thread is destroyed
         std::terminate();
     }
+}
+
+Thread::Thread(Thread&& other) noexcept
+    : m_tcb {other.m_tcb}
+{
+    other.m_tcb = nullptr;
+}
+
+Thread& Thread::operator=(Thread&& rhs) noexcept
+{
+    if (this != &rhs)
+    {
+       std::swap(m_tcb, rhs.m_tcb);
+    }
+
+    return *this;
 }
 
 id_t Thread::gettid() const

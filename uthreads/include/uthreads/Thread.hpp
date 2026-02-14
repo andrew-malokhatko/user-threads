@@ -1,10 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <thread>
 #include <list>
-
-#include <ucontext.h>
 
 namespace uthread
 {
@@ -21,6 +17,10 @@ public:
 
     Thread(const Thread&) = delete;
     Thread& operator=(const Thread&) = delete;
+
+    // TODO: do not leave UB for moved from objects, add a valid function or something?? idk
+    Thread(Thread&&) noexcept;
+    Thread& operator=(Thread&&) noexcept;
 
     [[nodiscard]] id_t gettid() const;
     [[nodiscard]] bool joinable() const;
