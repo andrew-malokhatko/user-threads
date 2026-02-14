@@ -1,7 +1,7 @@
 #include "Scheduler.hpp"
 
+#include "../include/uthreads/Thread.hpp"
 #include "TCB.hpp"
-#include "Thread.hpp"
 
 #include <cassert>
 
@@ -10,7 +10,7 @@ namespace uthread
 
 namespace
 {
-    constexpr size_t TIMER_INTERVAL_MS = 100;
+    constexpr size_t TIMER_INTERVAL_MS = 2;
 
 }
 

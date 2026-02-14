@@ -1,5 +1,5 @@
-#include  <Thread.hpp>
-#include<gtest/gtest.h>
+#include <uthreads/uthreads.hpp>
+#include <gtest/gtest.h>
 
 namespace
 {

@@ -1,5 +1,5 @@
+#include "uthreads/uthreads.hpp"
 #include "Scheduler.hpp"
-#include "Thread.hpp"
 
 #include <TCB.hpp>
 #include <gtest/gtest.h>
