@@ -1,9 +1,8 @@
 #include "Scheduler.hpp"
 
-#include "../include/uthreads/Thread.hpp"
-#include "TCB.hpp"
+#include <uthreads/Thread.hpp>
 
-#include <cassert>
+#include "TCB.hpp"
 
 namespace uthread
 {
