@@ -3,7 +3,7 @@ add_library(uthreads
         include/uthreads/uthreads.hpp
         include/uthreads/Thread.hpp
         include/uthreads/Atomic.hpp
-        # include/uthreads/Mutex.hpp
+        include/uthreads/Mutex.hpp
 
         # implementation
         src/Timer.hpp
@@ -13,7 +13,7 @@ add_library(uthreads
         src/Scheduler.hpp
         src/TCB.hpp
         src/TCB.cpp
-        # src/Mutex.cpp
+        src/Mutex.cpp
 )
 
 target_include_directories(uthreads

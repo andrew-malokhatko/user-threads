@@ -10,9 +10,9 @@ add_executable(atomic_tests
         AtomicTests.cpp
 )
 
-#add_executable(mutex_tests
-#        MutexTests.cpp
-#)
+add_executable(mutex_tests
+        MutexTests.cpp
+)
 
 target_link_libraries(simple_tests PRIVATE
         GTest::gtest
@@ -32,11 +32,11 @@ target_link_libraries(atomic_tests PRIVATE
         uthreads
 )
 
-#target_link_libraries(mutex_tests PRIVATE
-#        GTest::gtest
-#        GTest::gtest_main
-#        uthreads
-#)
+target_link_libraries(mutex_tests PRIVATE
+        GTest::gtest
+        GTest::gtest_main
+        uthreads
+)
 
 target_include_directories(scheduler_tests PRIVATE
         ${PROJECT_SOURCE_DIR}/uthreads/src
@@ -45,4 +45,4 @@ target_include_directories(scheduler_tests PRIVATE
 add_test(NAME SimpleTest COMMAND simple_tests)
 add_test(NAME SchedulerTests COMMAND scheduler_tests)
 add_test(NAME AtomicTests COMMAND atomic_test)
-# add_test(NAME MutexTests.cpp COMMAND mutex_tests)
+add_test(NAME MutexTests.cpp COMMAND mutex_tests)

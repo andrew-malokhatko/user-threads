@@ -2,4 +2,4 @@
 
 #include "Thread.hpp"
 #include "Atomic.hpp"
-// #include "Mutex.hpp"
+#include "Mutex.hpp"
