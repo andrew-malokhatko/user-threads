@@ -107,11 +107,11 @@ TEST_F(MutexTests, TryLockConcurrentIncrement)
     auto increment = []() {
         for (int i = 0; i < increment_per_thread; ++i)
         {
-            if (g_mutex.tryLock())
-            {
-                g_a++;
-                g_mutex.unlock();
-            }
+            while (!g_mutex.tryLock())
+                uthread::Thread::Yield();
+
+            g_a++;
+            g_mutex.unlock();
         }
     };
 
