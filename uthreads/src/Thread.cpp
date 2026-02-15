@@ -28,8 +28,9 @@ namespace state
 
 namespace
 {
+    // TODO: consider making scheduler non-global variable
     // initialize scheduler with interrupts
-    std::unique_ptr<Scheduler> scheduler = std::make_unique<NaiveScheduler>(SchedulerFunc);
+    std::unique_ptr<Scheduler> scheduler = std::make_unique<RoundRobinScheduler>(SchedulerFunc);
 }
 
 Thread::Thread(void (*func)())
