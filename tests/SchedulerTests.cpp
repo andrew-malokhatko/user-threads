@@ -7,12 +7,20 @@
 
 class SchedulerTests : public ::testing::Test
 {
+
 };
+
+namespace
+{
+
+void no_schedule(int) {};
+
+}
 
 TEST_F(SchedulerTests, RoundRobinTwoThreads)
 {
     std::list<uthread::TCB> tcbs;
-    uthread::RoundRobinScheduler scheduler {nullptr, false};
+    uthread::RoundRobinScheduler scheduler {no_schedule, false};
 
     tcbs.emplace_back(nullptr, uthread::ThreadState::Running, nullptr);
     tcbs.emplace_back(nullptr, uthread::ThreadState::Ready, nullptr);
@@ -39,7 +47,7 @@ TEST_F(SchedulerTests, RoundRobinTwoThreads)
 TEST_F(SchedulerTests, RoundRobinTwoVanishingThreads)
 {
     std::list<uthread::TCB> tcbs;
-    uthread::RoundRobinScheduler scheduler {nullptr, false};
+    uthread::RoundRobinScheduler scheduler {no_schedule, false};
 
     tcbs.emplace_back(nullptr, uthread::ThreadState::Running, nullptr);
     tcbs.emplace_back(nullptr, uthread::ThreadState::Ready, nullptr);
@@ -71,7 +79,7 @@ TEST_F(SchedulerTests, RoundRobinThreeThreads)
 {
 
     std::list<uthread::TCB> tcbs;
-    uthread::RoundRobinScheduler scheduler {nullptr, false};
+    uthread::RoundRobinScheduler scheduler {no_schedule, false};
 
     tcbs.emplace_back(nullptr, uthread::ThreadState::Running, nullptr);
     tcbs.emplace_back(nullptr, uthread::ThreadState::Ready, nullptr);

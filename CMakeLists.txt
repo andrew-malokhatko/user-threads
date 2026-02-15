@@ -25,5 +25,5 @@ add_executable(user_threads main.cpp)
 target_link_libraries(user_threads PRIVATE uthreads)
 
 target_include_directories(user_threads
-    PUBLIC uthreads/include
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/uthreads/include
 )
