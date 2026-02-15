@@ -30,12 +30,25 @@ Timer::Timer(void (*func)(int), size_t startMs, size_t intervalMs)
 
 void Timer::disableInterrupts()
 {
-    sigemptyset(&sa.sa_mask);
+    // TODO: experiment with this
+    // TODO: optimize if current solution will be used
+    // sigemptyset(&sa.sa_mass);
+
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGVTALRM);
+    sigprocmask(SIG_BLOCK, &set, NULL);
 }
 
 void Timer::enableInterrupts()
 {
-    sigaddset(&sa.sa_mask, SIGVTALRM);
+    // TODO: same as above
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGVTALRM);
+    sigprocmask(SIG_UNBLOCK, &set, NULL);
+
+    // sigaddset(&sa.sa_mask, SIGVTALRM);
 }
 
 } // namespace uthread
